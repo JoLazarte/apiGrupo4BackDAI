@@ -13,7 +13,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.uade.tpo.api_grupo4.controllers.Controlador;
@@ -103,7 +103,7 @@ public class ApiCourse {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<ResponseData<?>> deleteCourse(@PathVariable Long id) {
+    public ResponseEntity<ResponseData<?>> deleteCourse(@PathVariable("id") Long id) {
         try {
         controlador.deleteCourse(id);
 
@@ -116,7 +116,7 @@ public class ApiCourse {
     }
 
     @GetMapping("/by-mode/{mode}")
-    public ResponseEntity<List<CourseView>> getCoursesByMode(@PathVariable CourseMode mode) {
+    public ResponseEntity<List<CourseView>> getCoursesByMode(@PathVariable("mode") CourseMode mode) {
         try {
             List<CourseView> courses = controlador.findByMode(mode);
             return ResponseEntity.ok(courses);
@@ -125,7 +125,21 @@ public class ApiCourse {
         }
     }
 
-    
+    @GetMapping("/buscar")
+    public ResponseEntity<List<CourseView>> searchCoursesByName(@RequestParam String nombre) {
+        List<CourseView> cursos = controlador.findCoursesByName(nombre);
+        return ResponseEntity.ok(cursos);
+    }
 
+    @GetMapping("/{id}")
+    public ResponseEntity<CourseView> getCourseDetails(@PathVariable Long id) {
+        try {
+            CourseView courseView = controlador.getCourseViewById(id);
+            return ResponseEntity.ok(courseView);
+        } catch (Exception e) {
+            // Si no se encuentra el curso, devolvemos un 404 Not Found
+            return ResponseEntity.notFound().build();
+        }
+    }
     
 }

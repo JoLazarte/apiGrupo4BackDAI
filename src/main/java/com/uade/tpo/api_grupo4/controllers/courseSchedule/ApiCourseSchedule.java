@@ -38,25 +38,20 @@ public class ApiCourseSchedule {
     }
 
   
-    @PostMapping("/createSchedule/{courseId}/{sedeId}")
-    public ResponseEntity<ResponseData<?>> createSchedule(@PathVariable Long courseId, @PathVariable Long sedeId, @RequestBody CourseScheduleView scheduleView) {
-         try {
-            scheduleView.setId(null);
-
-            CourseSchedule courseSched = scheduleView.toEntity();
-
-            CourseSchedule createdCourseSched = controlador.saveCronograma(courseId, sedeId,courseSched);
-
-            CourseScheduleView createdCourseSchedView = createdCourseSched.toView();
-
-            return ResponseEntity.status(HttpStatus.CREATED).body(ResponseData.success(createdCourseSchedView));
-
-        } catch (Exception error) {
-        System.out.printf("[ApiCourseSchedule.createCourseSchedule] -> %s", error.getMessage() );
-        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(ResponseData.error("No se pudo crear el cronograma"));
+    @PostMapping("/CourseSchedule/{courseId}/{sedeId}")
+    public ResponseEntity<?> createCourseSchedule(
+            @PathVariable Long courseId,
+            @PathVariable Long sedeId,
+            @RequestBody CreateCourseScheduleRequest request) {
+        try {
+            CourseSchedule newSchedule = controlador.saveCronograma(courseId, sedeId, request);
+            return ResponseEntity.status(HttpStatus.CREATED).body(newSchedule);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
 
+    /*
     @PutMapping("")
     public ResponseEntity<ResponseData<?>> updateSchedule(@RequestBody CourseScheduleView courseScheduleView) {
         try {
@@ -73,6 +68,7 @@ public class ApiCourseSchedule {
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(ResponseData.error("No se pudo actualizar el cronograma"));
         }
     }
+    */
    
     @DeleteMapping("/{id}")
     public ResponseEntity<ResponseData<?>> deleteCourseSchedule(@PathVariable Long id) {
@@ -88,7 +84,7 @@ public class ApiCourseSchedule {
     }
 
     @GetMapping("/by-course/{courseId}")
-    public ResponseEntity<List<CourseScheduleView>> getSchedulesByCourse(@PathVariable Long courseId) {
+    public ResponseEntity<List<CourseScheduleView>> getSchedulesByCourse(@PathVariable("courseId") Long courseId) {
         try {
             List<CourseScheduleView> schedules = controlador.findSchedByCourse(courseId);
             return ResponseEntity.ok(schedules);

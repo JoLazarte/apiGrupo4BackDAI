@@ -58,13 +58,13 @@ public class ApiUser {
     }
 
     @GetMapping("/check-alias")
-    public ResponseEntity<Boolean> checkAlias(@RequestParam String alias) {
+    public ResponseEntity<Boolean> checkAlias(@RequestParam("alias") String alias) {
         boolean exists = controlador.aliasExists(alias);
         return ResponseEntity.ok(exists);
     }
 
     @GetMapping("/check-email")
-    public ResponseEntity<Boolean> checkEmail(@RequestParam String email) {
+    public ResponseEntity<Boolean> checkEmail(@RequestParam("email") String email) {
         boolean exists = controlador.emailExists(email);
         return ResponseEntity.ok(exists);
     }

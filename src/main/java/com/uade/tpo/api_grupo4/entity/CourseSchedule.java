@@ -4,6 +4,7 @@ import java.io.Serializable;
 import java.util.List;
 
 import com.uade.tpo.api_grupo4.controllers.courseSchedule.CourseScheduleView;
+import com.fasterxml.jackson.annotation.JsonBackReference;
 
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
@@ -31,7 +32,7 @@ public class CourseSchedule implements Serializable {
     private Long id;
     @ManyToOne
     @JoinColumn(nullable = false, name = "course_id")
-    //@JsonBackReference
+    @JsonBackReference
     private Course course;
     @Column(name = "hora_inicio", nullable = false)
     private String horaInicio;
@@ -45,14 +46,14 @@ public class CourseSchedule implements Serializable {
     @JoinColumn(name = "headquarter_id")
     private Headquarter sede;
     public CourseScheduleView toView() {
-        return new CourseScheduleView(
-                this.id,
-                this.course,
-                this.horaInicio,
-                this.horaFin,
-                this.instructor,
-                this.vacancy,
-                this.diaEnQueSeDicta,
-                this.sede);
-    }
+    return new CourseScheduleView(
+        this.id,
+        this.horaInicio,
+        this.horaFin,
+        this.instructor,
+        this.vacancy,
+        this.diaEnQueSeDicta,
+        this.sede
+    );
+}
 }

@@ -30,7 +30,7 @@ public class Student extends Person{
     @Column(columnDefinition = "LONGTEXT")
     private String dniDorso;
     private String nroTramite;
-    private int cuentaCorriente;
+    private double  cuentaCorriente;
     private String nroDocumento;
     private String tipoTarjeta;
 

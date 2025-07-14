@@ -3,8 +3,10 @@ package com.uade.tpo.api_grupo4.entity;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import com.fasterxml.jackson.annotation.JsonManagedReference;
+import com.uade.tpo.api_grupo4.controllers.courseSchedule.CourseScheduleView;
 import com.uade.tpo.api_grupo4.controllers.courses.CourseView;
 
 import jakarta.persistence.CascadeType;
@@ -38,11 +40,12 @@ public class Course {
     @Column(columnDefinition = "LONGTEXT")
     private String content;
     private String requirements;
+    private String description;
     private int length;
     private int price;
     private CourseMode mode;
-    private String fechaInicio;
-    private String fechaFin;
+    private LocalDate fechaInicio;
+    private LocalDate fechaFin;
     @ManyToMany
     @JoinTable(
     name = "headquarter_curso", 
@@ -50,26 +53,29 @@ public class Course {
     inverseJoinColumns = @JoinColumn(name = "headquarter_id"))
     private List<Headquarter> sedes;
 
+    @OneToMany(mappedBy = "course", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @Builder.Default
+    @JsonManagedReference
+    private List<CourseSchedule> cronogramas = new ArrayList<>();
+
     public CourseView toView(){
+        List<CourseScheduleView> cronogramasView = this.cronogramas
+                .stream()
+                .map(CourseSchedule::toView)
+                .collect(Collectors.toList());
         return new CourseView(
             this.id,
             this.name,
             this.content,
             this.requirements,
+            this.description,
             this.length,
             this.price,
             this.mode,
-            this.fechaInicio,
-            this.fechaFin, 
-            this.sedes
-      
+            this.fechaInicio.toString(),
+            this.fechaFin.toString(),
+            this.sedes,
+            cronogramasView
         );
     }
-
-
-    
-
-
-    
-    
 }

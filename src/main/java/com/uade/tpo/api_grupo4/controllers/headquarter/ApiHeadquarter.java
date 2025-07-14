@@ -117,7 +117,7 @@ public class ApiHeadquarter {
     }
 
     @PutMapping("/{sedeId}/{courseId}")
-    public ResponseEntity<ResponseData<?>> cargarSedesParaCurso(@PathVariable Long sedeId, @PathVariable Long courseId) {
+    public ResponseEntity<ResponseData<?>> cargarSedesParaCurso(@PathVariable("sedeId") Long sedeId, @PathVariable("courseId") Long courseId) {
         try {
 
         controlador.cargarSede(sedeId, courseId);

@@ -30,10 +30,12 @@ import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import java.util.List;
 
 @RestController
@@ -75,7 +77,7 @@ public class ApiRecipe {
 
     // Endpoint para añadir un Material a una Receta que YA EXISTE
     @PostMapping("/{recipeId}/materials")
-    public ResponseEntity<?> addMaterialToRecipeEndpoint(@PathVariable Long recipeId, @RequestBody MaterialRequestDTO request) { // <-- CORREGIDO
+    public ResponseEntity<?> addMaterialToRecipeEndpoint(@PathVariable("recipeId") Long recipeId, @RequestBody MaterialRequestDTO request) { // <-- CORREGIDO
         try {
             MaterialUsed createdMaterial = controlador.addMaterialToRecipe(recipeId, request);
             return new ResponseEntity<>(createdMaterial, HttpStatus.CREATED);
@@ -107,7 +109,7 @@ public class ApiRecipe {
 
     @PostMapping("/{recipeId}/reviews")
     public ResponseEntity<?> createReview(
-            @PathVariable Long recipeId,
+            @PathVariable("recipeId") Long recipeId,
             @RequestBody CreateReviewRequest request,
             Authentication authentication) {
 
@@ -123,11 +125,39 @@ public class ApiRecipe {
         }
     }
 
+    @PostMapping("/toggle-save/{userId}/{recipeId}") // URL para guardar/desguardar
+    public ResponseEntity<String> toggleSaveRecipe(
+            @PathVariable("userId") Long userId,
+            @PathVariable("recipeId") Long recipeId) {
+        try {
+            boolean isSaved = controlador.toggleSaveRecipe(userId, recipeId);
+            if (isSaved) {
+                return new ResponseEntity<>("Receta guardada exitosamente.", HttpStatus.OK);
+            } else {
+                return new ResponseEntity<>("Receta desguardada exitosamente.", HttpStatus.OK);
+            }
+        } catch (RuntimeException e) {
+            return new ResponseEntity<>(e.getMessage(), HttpStatus.NOT_FOUND); // Por ejemplo, usuario o receta no encontrados
+        } catch (Exception e) {
+            return new ResponseEntity<>("Error al procesar la solicitud.", HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<Recipe> getRecipeById(@PathVariable("id") Long id) {
+        // Llamamos al método en nuestro "servicio" (Controlador.java)
+        Recipe recipe = controlador.getRecipeById(id);
+        // Si lo encuentra, Spring automáticamente devolverá un 200 OK.
+        // La excepción del paso anterior se encargará de los casos 404.
+        return ResponseEntity.ok(recipe);
+    }
+
     @GetMapping
     public ResponseEntity<?> getAllRecipes(
-            @RequestParam(defaultValue = "alpha_asc") String sort,
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size) { // <-- Nuevos parámetros
+            // SOLUCIÓN: Añadimos explícitamente el nombre de cada parámetro.
+            @RequestParam(name = "sort", defaultValue = "alpha_asc") String sort,
+            @RequestParam(name = "page", defaultValue = "0") int page,
+            @RequestParam(name = "size", defaultValue = "10") int size) {
         
         try {
             // La respuesta del servicio ahora es un objeto Page
@@ -141,22 +171,25 @@ public class ApiRecipe {
 
     @GetMapping("/search/by-name")
     public ResponseEntity<Page<Recipe>> searchByName(
-            @RequestParam String name,
-            @RequestParam(defaultValue = "alpha_asc") String sort,
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size) {
+            // SOLUCIÓN: Añadimos explícitamente el nombre de cada parámetro.
+            @RequestParam("name") String name,
+            @RequestParam(name = "sort", defaultValue = "alpha_asc") String sort,
+            @RequestParam(name = "page", defaultValue = "0") int page,
+            @RequestParam(name = "size", defaultValue = "10") int size) {
         
         Page<Recipe> recipes = controlador.findRecipesByName(name, sort, page, size);
         return ResponseEntity.ok(recipes); // Siempre devuelve 200 OK
     }
 
 
+
     @GetMapping("/search/by-author")
     public ResponseEntity<Page<Recipe>> searchByAuthor(
-            @RequestParam String username,
-            @RequestParam(defaultValue = "alpha_asc") String sort,
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size) {
+            // SOLUCIÓN COMPLETA: Añadimos el nombre explícito y mantenemos el defaultValue.
+            @RequestParam("username") String username,
+            @RequestParam(name = "sort", defaultValue = "alpha_asc") String sort,
+            @RequestParam(name = "page", defaultValue = "0") int page,
+            @RequestParam(name = "size", defaultValue = "10") int size) {
         
         Page<Recipe> recipes = controlador.findRecipesByAuthor(username, sort, page, size);
         return ResponseEntity.ok(recipes);
@@ -184,27 +217,77 @@ public class ApiRecipe {
 
     @GetMapping("/search/by-type")
     public ResponseEntity<Page<Recipe>> searchByType(
-            @RequestParam Long typeId,
-            @RequestParam(defaultValue = "alpha_asc") String sort,
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size) {
+            @RequestParam("typeId") Long typeId,
+            @RequestParam(name = "sort", defaultValue = "alpha_asc") String sort,
+            @RequestParam(name = "page", defaultValue = "0") int page,
+            @RequestParam(name = "size", defaultValue = "10") int size) {
         
         Page<Recipe> recipePage = controlador.findRecipesByType(typeId, sort, page, size);
         return ResponseEntity.ok(recipePage); // Siempre devolvemos 200 OK, incluso si la página está vacía
     }
 
     @GetMapping("/search/by-ingredient")
-    public ResponseEntity<Page<Recipe>> searchByIngredient( // Cambiamos el tipo de retorno
-            @RequestParam String name,
-            @RequestParam(defaultValue = "true") boolean contains,
-            @RequestParam(defaultValue = "alpha_asc") String sort,
-            @RequestParam(defaultValue = "0") int page,     // <-- Asegúrate de que acepte 'page'
-            @RequestParam(defaultValue = "10") int size) {  // <-- Asegúrate de que acepte 'size'
+    public ResponseEntity<Page<Recipe>> searchByIngredient(
+            // SOLUCIÓN: Añadimos explícitamente el nombre de cada parámetro.
+            @RequestParam("name") String name,
+            @RequestParam(name = "contains", defaultValue = "true") boolean contains,
+            @RequestParam(name = "sort", defaultValue = "alpha_asc") String sort,
+            @RequestParam(name = "page", defaultValue = "0") int page,
+            @RequestParam(name = "size", defaultValue = "10") int size) {
         
         // Llamamos al método actualizado del controlador, pasándole todos los parámetros
         Page<Recipe> recipePage = controlador.findRecipesByIngredientPresence(name, contains, sort, page, size);
         
         // Devolvemos la página completa con un 200 OK
         return ResponseEntity.ok(recipePage);
+    }
+
+    @GetMapping("/saved-by-user/{userId}") // URL para obtener recetas guardadas por un usuario
+    public ResponseEntity<List<Recipe>> getSavedRecipesForUser(@PathVariable("userId") Long userId) {
+        try {
+            List<Recipe> savedRecipes = controlador.getSavedRecipesByUser(userId);
+            return new ResponseEntity<>(savedRecipes, HttpStatus.OK);
+        } catch (RuntimeException e) {
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND); // Usuario no encontrado
+        } catch (Exception e) {
+            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    @GetMapping("/is-saved/{userId}/{recipeId}") // URL para verificar si está guardada
+    public ResponseEntity<Boolean> isRecipeSaved(
+            @PathVariable("userId") Long userId,
+            @PathVariable("recipeId") Long recipeId) {
+        try {
+            boolean isSaved = controlador.isRecipeSavedByUser(userId, recipeId);
+            return new ResponseEntity<>(isSaved, HttpStatus.OK);
+        } catch (RuntimeException e) {
+            return new ResponseEntity<>(false, HttpStatus.NOT_FOUND); // Usuario o receta no encontrados, o manejo de errores
+        } catch (Exception e) {
+            return new ResponseEntity<>(false, HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    @PutMapping("/{recipeId}")
+    public ResponseEntity<?> updateRecipe(
+            @PathVariable("recipeId") Long recipeId,
+            @RequestBody CreateRecipeRequest request,
+            @AuthenticationPrincipal Person author // Obtiene la persona autenticada
+    ) {
+        try {
+            if (author == null) {
+                return new ResponseEntity<>("No autenticado. Se requiere un token de usuario.", HttpStatus.UNAUTHORIZED);
+            }
+            Recipe updatedRecipe = controlador.updateRecipe(recipeId, request, author);
+            return new ResponseEntity<>(updatedRecipe, HttpStatus.OK);
+        } catch (Exception e) {
+            // Manejo de errores más específico si lo necesitas
+            if (e.getMessage().contains("No tienes permiso")) {
+                return new ResponseEntity<>(e.getMessage(), HttpStatus.FORBIDDEN);
+            } else if (e.getMessage().contains("no encontrada")) {
+                return new ResponseEntity<>(e.getMessage(), HttpStatus.NOT_FOUND);
+            }
+            return new ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);
+        }
     }
 }

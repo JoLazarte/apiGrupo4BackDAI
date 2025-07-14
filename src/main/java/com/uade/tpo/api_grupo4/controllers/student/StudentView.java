@@ -24,14 +24,14 @@ public class StudentView extends PersonView {
     private String dniFrente;
     private String dniDorso;
     private String nroTramite;
-    private int cuentaCorriente;
+    private double  cuentaCorriente;
     private String nroDocumento;
     private String tipoTarjeta;
 
     // ---> CONSTRUCTOR CORREGIDO USANDO SUPER() <---
     public StudentView(Long id, String username, String firstName, String lastName, String email, String password,
                        String phone, String address, String urlAvatar, Boolean permissionGranted,
-                        String cardNumber, String dniFrente, String dniDorso, String nroTramite, int cuentaCorriente,
+                        String cardNumber, String dniFrente, String dniDorso, String nroTramite, double  cuentaCorriente,
                        String nroDocumento, String tipoTarjeta) {
 
         // 1. Llamamos al constructor del padre (PersonView) para que él asigne sus campos.

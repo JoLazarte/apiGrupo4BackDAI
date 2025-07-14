@@ -41,7 +41,7 @@ public class ApiStudent {
     }
 
     @PostMapping("/createStudent/{studentId}")
-    public ResponseEntity<String> crearEstudiante(@PathVariable Long studentId, @RequestBody Student updatedStudent) {
+    public ResponseEntity<String> crearEstudiante(@PathVariable("studentId") Long studentId, @RequestBody Student updatedStudent) {
         try {
             controlador.agregarEstudiante(studentId, updatedStudent);
             return ResponseEntity.ok("Estudiante creado exitosamente con el id: " + studentId);
@@ -52,4 +52,19 @@ public class ApiStudent {
         }
     }
     
+    @GetMapping("/{id}")
+    public ResponseEntity<?> getStudentById(@PathVariable Long id) {
+        try {
+            StudentDataDTO studentData = controlador.getStudentData(id);
+            return ResponseEntity.ok(studentData);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+        }
+    }
+
+    @GetMapping("/{id}/payments")
+    public ResponseEntity<List<PaymentHistoryDTO>> getStudentPaymentHistory(@PathVariable Long id) {
+        List<PaymentHistoryDTO> history = controlador.getPaymentHistory(id);
+        return ResponseEntity.ok(history);
+    }
 }

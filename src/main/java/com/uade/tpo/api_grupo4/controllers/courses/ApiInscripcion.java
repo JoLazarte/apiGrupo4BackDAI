@@ -27,31 +27,35 @@ public class ApiInscripcion {
         this.controlador = controlador;
     }
 
-    @PostMapping("/enroll/{studentId}/{scheduleId}")
-    public ResponseEntity<InscripcionView> enrollStudent(@PathVariable(value = "studentId", required = false) Long studentId, @PathVariable(value = "scheduleId") Long scheduleId) {
+    @PostMapping("/inscribir")
+    public ResponseEntity<?> enrollStudent(@RequestBody InscripcionDTO inscripcionDTO) {
         try {
-            InscripcionView inscription = controlador.enrollStudent(studentId, scheduleId);
-            return ResponseEntity.status(HttpStatus.CREATED).body(inscription);
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest().build();
+            // Le pasamos el DTO completo al controlador
+            InscripcionExitosaDTO resultado = controlador.enrollStudent(inscripcionDTO);
+            return ResponseEntity.status(HttpStatus.CREATED).body(resultado);
+        } catch (IllegalStateException | IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Ocurrió un error inesperado al inscribir.");
         }
     }
     
-    @PutMapping("/{id}/cancel")
-    public ResponseEntity<InscripcionView> cancelEnrollment(@PathVariable Long id) {
+    @PostMapping("/cancelar")
+    public ResponseEntity<?> cancelarInscripcion(@RequestBody CancelacionDTO cancelacionDTO) {
         try {
-            return controlador.cancelEnrollment(id)
-                    .map(inscription -> ResponseEntity.ok(inscription))
-                    .orElse(ResponseEntity.notFound().build());
+            ResultadoCancelacionDTO resultado = controlador.cancelarInscripcion(cancelacionDTO);
+            return ResponseEntity.ok(resultado);
+        } catch (IllegalStateException | IllegalArgumentException e) {
+            // Captura errores de negocio (ej: "ya está cancelada", "no encontrado")
+            return ResponseEntity.badRequest().body(e.getMessage());
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+            // Captura cualquier otro error inesperado
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error inesperado al procesar la cancelación.");
         }
     }
     
     @GetMapping("/by-student/{studentId}")
-    public ResponseEntity<List<InscripcionView>> getInscriptionsByStudent(@PathVariable Long studentId) {
+    public ResponseEntity<List<InscripcionView>> getInscriptionsByStudent(@PathVariable("studentId") Long studentId) {
         try {
             List<InscripcionView> inscriptions = controlador.findByStudent(studentId);
             return ResponseEntity.ok(inscriptions);

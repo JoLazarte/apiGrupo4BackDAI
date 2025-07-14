@@ -1,4 +1,5 @@
 package com.uade.tpo.api_grupo4.repository;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -15,7 +16,7 @@ public interface CourseRepository extends JpaRepository<Course, Long> {
 
     List<Course> findByMode(CourseMode mode);
     List<Course> findByNameContainingIgnoreCase(String name);
-    List<Course> findByFechaInicioBetween(String startDate, String endDate);
+    List<Course> findByFechaInicioBetween(LocalDate startDate, LocalDate endDate); // <-- CAMBIO AQUÍ
     List<Course> findByPriceBetween(Double minPrice, Double maxPrice);
     
    
